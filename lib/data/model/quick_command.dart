@@ -1,33 +1,13 @@
 // lib/data/model/quick_command.dart
-import 'package:hive/hive.dart';
-
-part 'quick_command.g.dart';
-
-@HiveType(typeId: 10) // Usa un typeId non ancora utilizzato nel progetto
-class QuickCommand extends HiveObject {
-  @HiveField(0)
-  String id;
-
-  @HiveField(1)
-  String name;
-
-  @HiveField(2)
-  String command;
-
-  @HiveField(3)
-  String? description;
-
-  @HiveField(4)
-  String? icon; // Nome dell'icona (es: 'terminal', 'refresh', 'info')
-
-  @HiveField(5)
-  String? serverId; // Se null, comando disponibile per tutti i server
-
-  @HiveField(6)
-  int order;
-
-  @HiveField(7)
-  DateTime createdAt;
+class QuickCommand {
+  final String id;
+  final String name;
+  final String command;
+  final String? description;
+  final String? icon;
+  final String? serverId;
+  final int order;
+  final DateTime createdAt;
 
   QuickCommand({
     required this.id,
