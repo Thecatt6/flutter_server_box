@@ -8,7 +8,7 @@ import 'package:server_box/data/provider/quick_command.dart';
 import 'package:server_box/view/page/quick_commands_settings.dart';
 
 class QuickCommandsCard extends StatefulWidget {
-  final ServerStatus server;
+  final Server server;
 
   const QuickCommandsCard({
     super.key,
