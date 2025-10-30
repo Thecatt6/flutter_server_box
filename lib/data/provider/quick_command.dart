@@ -1,78 +1,70 @@
-// lib/data/provider/quick_command.dart
-import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import '../model/quick_command.dart';
-import 'default_quick_commands.dart';
+// lib/data/model/quick_command.dart
+class QuickCommand {
+  final String id;
+  final String name;
+  final String command;
+  final String? description;
+  final String? icon;
+  final String? serverId;
+  final int order;
+  final DateTime createdAt;
 
-class QuickCommandProvider extends ChangeNotifier {
-  static const String _boxName = 'quick_commands';
-  Box<QuickCommand>? _box;
+  QuickCommand({
+    required this.id,
+    required this.name,
+    required this.command,
+    this.description,
+    this.icon,
+    this.serverId,
+    this.order = 0,
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
-  List<QuickCommand> get commands {
-    if (_box == null) return [];
-    return _box!.values.toList()..sort((a, b) => a.order.compareTo(b.order));
+  QuickCommand copyWith({
+    String? id,
+    String? name,
+    String? command,
+    String? description,
+    String? icon,
+    String? serverId,
+    int? order,
+    DateTime? createdAt,
+  }) {
+    return QuickCommand(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      command: command ?? this.command,
+      description: description ?? this.description,
+      icon: icon ?? this.icon,
+      serverId: serverId ?? this.serverId,
+      order: order ?? this.order,
+      createdAt: createdAt ?? this.createdAt,
+    );
   }
 
-  Future<void> init() async {
-    _box = await Hive.openBox<QuickCommand>(_boxName);
-    notifyListeners();
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'command': command,
+      'description': description,
+      'icon': icon,
+      'serverId': serverId,
+      'order': order,
+      'createdAt': createdAt.toIso8601String(),
+    };
   }
 
-  List<QuickCommand> getCommandsForServer(String? serverId) {
-    return commands.where((cmd) => 
-      cmd.serverId == null || cmd.serverId == serverId
-    ).toList();
-  }
-
-  Future<void> addCommand(QuickCommand command) async {
-    await _box?.put(command.id, command);
-    notifyListeners();
-  }
-
-  Future<void> updateCommand(QuickCommand command) async {
-    await _box?.put(command.id, command);
-    notifyListeners();
-  }
-
-  Future<void> deleteCommand(String id) async {
-    await _box?.delete(id);
-    notifyListeners();
-  }
-
-  Future<void> reorderCommands(List<QuickCommand> reordered) async {
-    for (var i = 0; i < reordered.length; i++) {
-      final updated = reordered[i].copyWith(order: i);
-      await _box?.put(updated.id, updated);
-    }
-    notifyListeners();
-  }
-
-  Future<void> addDefaultCommands() async {
-    // Importa i comandi essenziali predefiniti
-    final defaults = DefaultQuickCommands.essential;
-
-    for (var cmd in defaults) {
-      if (!_box!.containsKey(cmd.id)) {
-        await addCommand(cmd);
-      }
-    }
-  }
-
-  Future<void> addCommandsByCategory(String category) async {
-    final commands = DefaultQuickCommands.getByCategory(category);
-    
-    for (var cmd in commands) {
-      if (!_box!.containsKey(cmd.id)) {
-        await addCommand(cmd);
-      }
-    }
-  }
-
-  Future<void> addAllDefaultCommands() async {
-    for (var cmd in DefaultQuickCommands.all) {
-      if (!_box!.containsKey(cmd.id)) {
-        await addCommand(cmd);
-      }
-    }
+  factory QuickCommand.fromJson(Map<String, dynamic> json) {
+    return QuickCommand(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      command: json['command'] as String,
+      description: json['description'] as String?,
+      icon: json['icon'] as String?,
+      serverId: json['serverId'] as String?,
+      order: json['order'] as int? ?? 0,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
   }
 }
