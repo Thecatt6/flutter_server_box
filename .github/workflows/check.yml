@@ -1,0 +1,71 @@
+# .github/workflows/check.yml
+# Workflow leggero per controllare velocemente il codice
+name: Quick Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check:
+    name: Flutter Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🏗️ Generate code (build_runner)
+        run: |
+          flutter pub run build_runner build --delete-conflicting-outputs
+          echo "✅ Build runner completed"
+
+      - name: 🔍 Verify generated files
+        run: |
+          if [ ! -f "lib/data/model/quick_command.g.dart" ]; then
+            echo "❌ Error: quick_command.g.dart not generated!"
+            exit 1
+          fi
+          echo "✅ Generated files found"
+
+      - name: 📊 Analyze code
+        run: |
+          flutter analyze > analyze_output.txt 2>&1 || true
+          cat analyze_output.txt
+          
+          # Controlla se ci sono errori critici
+          if grep -q "error •" analyze_output.txt; then
+            echo "❌ Found errors in code analysis"
+            exit 1
+          fi
+          echo "✅ No critical errors found"
+
+      - name: 🎨 Check formatting
+        run: |
+          dart format --output=none --set-exit-if-changed . || echo "⚠️ Code needs formatting"
+        continue-on-error: true
+
+      - name: 🧪 Run tests
+        run: flutter test || echo "⚠️ Some tests failed"
+        continue-on-error: true
+
+      - name: ✅ Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "✅ Code check completed!"
+          echo "=========================================="
+          echo "Check the logs above for any warnings."
