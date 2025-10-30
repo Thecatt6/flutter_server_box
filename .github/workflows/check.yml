@@ -18,9 +18,11 @@ jobs:
       - name: 🔧 Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
           channel: 'stable'
           cache: true
+          
+      - name: FLutter Upgrade
+        run: flutter upgrade
 
       - name: 📦 Get dependencies
         run: flutter pub get
