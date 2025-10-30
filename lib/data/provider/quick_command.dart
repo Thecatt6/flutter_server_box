@@ -1,70 +1,105 @@
-// lib/data/model/quick_command.dart
-class QuickCommand {
-  final String id;
-  final String name;
-  final String command;
-  final String? description;
-  final String? icon;
-  final String? serverId;
-  final int order;
-  final DateTime createdAt;
+// lib/data/provider/quick_command.dart
+import 'dart:convert';
+import 'package:fl_lib/fl_lib.dart';
+import 'package:server_box/data/model/quick_command.dart';
+import 'package:server_box/data/provider/default_quick_commands.dart';
+import 'package:server_box/data/res/store.dart';
 
-  QuickCommand({
-    required this.id,
-    required this.name,
-    required this.command,
-    this.description,
-    this.icon,
-    this.serverId,
-    this.order = 0,
-    DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+class QuickCommandProvider extends ChangeNotifier {
+  static const String _storeKey = 'quick_commands';
+  
+  List<QuickCommand> _commands = [];
 
-  QuickCommand copyWith({
-    String? id,
-    String? name,
-    String? command,
-    String? description,
-    String? icon,
-    String? serverId,
-    int? order,
-    DateTime? createdAt,
-  }) {
-    return QuickCommand(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      command: command ?? this.command,
-      description: description ?? this.description,
-      icon: icon ?? this.icon,
-      serverId: serverId ?? this.serverId,
-      order: order ?? this.order,
-      createdAt: createdAt ?? this.createdAt,
-    );
+  List<QuickCommand> get commands {
+    return List.unmodifiable(_commands)
+      ..sort((a, b) => a.order.compareTo(b.order));
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'command': command,
-      'description': description,
-      'icon': icon,
-      'serverId': serverId,
-      'order': order,
-      'createdAt': createdAt.toIso8601String(),
-    };
+  Future<void> init() async {
+    await _loadCommands();
   }
 
-  factory QuickCommand.fromJson(Map<String, dynamic> json) {
-    return QuickCommand(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      command: json['command'] as String,
-      description: json['description'] as String?,
-      icon: json['icon'] as String?,
-      serverId: json['serverId'] as String?,
-      order: json['order'] as int? ?? 0,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-    );
+  Future<void> _loadCommands() async {
+    final stored = Stores.setting.box.get(_storeKey);
+    if (stored == null || stored.isEmpty) {
+      _commands = [];
+    } else {
+      try {
+        final List<dynamic> jsonList = json.decode(stored);
+        _commands = jsonList
+            .map((json) => QuickCommand.fromJson(json as Map<String, dynamic>))
+            .toList();
+      } catch (e) {
+        _commands = [];
+      }
+    }
+    notifyListeners();
+  }
+
+  Future<void> _saveCommands() async {
+    final jsonString = json.encode(_commands.map((c) => c.toJson()).toList());
+    await Stores.setting.box.put(_storeKey, jsonString);
+  }
+
+  List<QuickCommand> getCommandsForServer(String? serverId) {
+    return _commands
+        .where((cmd) => cmd.serverId == null || cmd.serverId == serverId)
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+  }
+
+  Future<void> addCommand(QuickCommand command) async {
+    _commands.add(command);
+    await _saveCommands();
+    notifyListeners();
+  }
+
+  Future<void> updateCommand(QuickCommand command) async {
+    final index = _commands.indexWhere((c) => c.id == command.id);
+    if (index != -1) {
+      _commands[index] = command;
+      await _saveCommands();
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteCommand(String id) async {
+    _commands.removeWhere((c) => c.id == id);
+    await _saveCommands();
+    notifyListeners();
+  }
+
+  Future<void> reorderCommands(List<QuickCommand> reordered) async {
+    _commands = reordered.asMap().entries.map((entry) {
+      return entry.value.copyWith(order: entry.key);
+    }).toList();
+    await _saveCommands();
+    notifyListeners();
+  }
+
+  Future<void> addDefaultCommands() async {
+    final defaults = DefaultQuickCommands.essential;
+    for (var cmd in defaults) {
+      if (!_commands.any((c) => c.id == cmd.id)) {
+        await addCommand(cmd);
+      }
+    }
+  }
+
+  Future<void> addCommandsByCategory(String category) async {
+    final commands = DefaultQuickCommands.getByCategory(category);
+    for (var cmd in commands) {
+      if (!_commands.any((c) => c.id == cmd.id)) {
+        await addCommand(cmd);
+      }
+    }
+  }
+
+  Future<void> addAllDefaultCommands() async {
+    for (var cmd in DefaultQuickCommands.all) {
+      if (!_commands.any((c) => c.id == cmd.id)) {
+        await addCommand(cmd);
+      }
+    }
   }
 }
