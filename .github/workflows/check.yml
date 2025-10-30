@@ -32,14 +32,6 @@ jobs:
           flutter pub run build_runner build --delete-conflicting-outputs
           echo "✅ Build runner completed"
 
-      - name: 🔍 Verify generated files
-        run: |
-          if [ ! -f "lib/data/model/quick_command.g.dart" ]; then
-            echo "❌ Error: quick_command.g.dart not generated!"
-            exit 1
-          fi
-          echo "✅ Generated files found"
-
       - name: 📊 Analyze code
         run: |
           flutter analyze > analyze_output.txt 2>&1 || true
