@@ -3,16 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:server_box/data/model/quick_command.dart';
-import 'package:server_box/data/model/server/server.dart';
+import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/provider/quick_command.dart';
 import 'package:server_box/view/page/quick_commands_settings.dart';
+import 'package:server_box/data/provider/server.dart';
 
 class QuickCommandsCard extends StatefulWidget {
-  final Server server;
+  final ServerPrivateInfo spi;
 
   const QuickCommandsCard({
     super.key,
-    required this.server,
+    required this.spi,
   });
 
   @override
@@ -27,7 +28,7 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
   Widget build(BuildContext context) {
     return Consumer<QuickCommandProvider>(
       builder: (context, provider, child) {
-        final commands = provider.getCommandsForServer(widget.server.spi.id);
+        final commands = provider.getCommandsForServer(widget.spi.id);
 
         if (commands.isEmpty) {
           return Card(
@@ -66,8 +67,8 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
                     Text(
                       'Quick Commands',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const Spacer(),
                     IconButton(
@@ -106,23 +107,23 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
           leading: Icon(_getIcon(command.icon)),
           title: Text(command.name),
           subtitle: command.description != null
-              ? Text(command.description!, style: const TextStyle(fontSize: 12))
-              : null,
+          ? Text(command.description!, style: const TextStyle(fontSize: 12))
+          : null,
           trailing: isLoading
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.play_arrow),
-                  onPressed: () => _executeCommand(command),
-                  tooltip: 'Execute',
-                ),
+          ? const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+          : IconButton(
+            icon: const Icon(Icons.play_arrow),
+            onPressed: () => _executeCommand(command),
+            tooltip: 'Execute',
+          ),
           onTap: isLoading ? null : () => _executeCommand(command),
         ),
         if (result != null) _buildResultDisplay(command.id, result),
-        if (index < _results.length - 1) const Divider(height: 1),
+          if (index < _results.length - 1) const Divider(height: 1),
       ],
     );
   }
@@ -135,13 +136,13 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: hasError
-            ? Colors.red.withValues(alpha: 0.1)
-            : Colors.green.withValues(alpha: 0.1),
+        ? Colors.red.withValues(alpha: 0.1)
+        : Colors.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: hasError
-              ? Colors.red.withValues(alpha: 0.3)
-              : Colors.green.withValues(alpha: 0.3),
+          ? Colors.red.withValues(alpha: 0.3)
+          : Colors.green.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -242,15 +243,20 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
     });
 
     try {
-      // Usa il client SSH di ServerBox
-      final client = widget.server.client;
+      // Ottieni il client SSH dal ServerProvider
+      final serverProvider = context.read<ServerProvider>();
+      final server = serverProvider.servers.firstWhere(
+        (s) => s.spi.id == widget.spi.id,
+      );
+
+      final client = server.client;
 
       if (client == null) {
         throw Exception('Server not connected');
       }
 
       final result = await client.run(command.command);
-      
+
       setState(() {
         _results[command.id] = CommandResult(
           output: result.trim(),

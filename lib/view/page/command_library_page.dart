@@ -1,12 +1,12 @@
 // lib/view/page/command_library_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../data/model/quick_command.dart';
-import '../../data/provider/quick_command.dart';
-import '../../data/provider/default_quick_commands.dart';
+import 'package:server_box/data/model/quick_command.dart';
+import 'package:server_box/data/provider/quick_command.dart';
+import 'package:server_box/data/provider/default_quick_commands.dart';
 
 class CommandLibraryPage extends StatefulWidget {
-  const CommandLibraryPage({Key? key}) : super(key: key);
+  const CommandLibraryPage({super.key});
 
   @override
   State<CommandLibraryPage> createState() => _CommandLibraryPageState();
@@ -63,7 +63,7 @@ class _CommandLibraryPageState extends State<CommandLibraryPage> {
   }
 
   Widget _buildCategoryFilter() {
-    return Container(
+    return SizedBox(
       height: 50,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -130,9 +130,9 @@ class _CommandLibraryPageState extends State<CommandLibraryPage> {
 
         return Card(
           color: alreadyAdded
-              ? Colors.grey.withOpacity(0.1)
+              ? Colors.grey.withValues(alpha: 0.1)
               : isSelected
-                  ? Theme.of(context).primaryColor.withOpacity(0.1)
+                  ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
                   : null,
           child: ListTile(
             enabled: !alreadyAdded,
@@ -154,7 +154,7 @@ class _CommandLibraryPageState extends State<CommandLibraryPage> {
                 if (alreadyAdded)
                   Chip(
                     label: Text('Added', style: TextStyle(fontSize: 10)),
-                    backgroundColor: Colors.green.withOpacity(0.2),
+                    backgroundColor: Colors.green.withValues(alpha: 0.2),
                     padding: EdgeInsets.zero,
                   ),
               ],

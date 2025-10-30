@@ -1,7 +1,7 @@
 // lib/data/provider/default_quick_commands.dart
 // Lista di comandi predefiniti utili da importare
 
-import '../model/quick_command.dart';
+import 'package:server_box/data/model/quick_command.dart';
 
 class DefaultQuickCommands {
   static List<QuickCommand> get systemInfo => [

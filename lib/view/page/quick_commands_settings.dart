@@ -2,12 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import '../../data/model/quick_command.dart';
-import '../../data/provider/quick_command.dart';
-import 'command_library_page.dart';
+import 'package:server_box/data/model/quick_command.dart';
+import 'package:server_box/data/provider/quick_command.dart';
+import 'package:server_box/view/page/command_library_page.dart';
 
 class QuickCommandsSettingsPage extends StatelessWidget {
-  const QuickCommandsSettingsPage({Key? key}) : super(key: key);
+  const QuickCommandsSettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +189,7 @@ class QuickCommandsSettingsPage extends StatelessWidget {
 class CommandEditDialog extends StatefulWidget {
   final QuickCommand? command;
 
-  const CommandEditDialog({Key? key, this.command}) : super(key: key);
+  const CommandEditDialog({super.key, this.command});
 
   @override
   State<CommandEditDialog> createState() => _CommandEditDialogState();
@@ -273,8 +273,8 @@ class _CommandEditDialogState extends State<CommandEditDialog> {
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: isSelected 
-                          ? Theme.of(context).primaryColor.withOpacity(0.2)
-                          : Colors.grey.withOpacity(0.1),
+                          ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
+                          : Colors.grey.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isSelected

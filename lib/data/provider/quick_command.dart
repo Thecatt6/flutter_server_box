@@ -1,18 +1,18 @@
 // lib/data/provider/quick_command.dart
 import 'dart:convert';
-import 'package:fl_lib/fl_lib.dart';
+import 'package:flutter/foundation.dart';
 import 'package:server_box/data/model/quick_command.dart';
 import 'package:server_box/data/provider/default_quick_commands.dart';
 import 'package:server_box/data/res/store.dart';
 
-class QuickCommandProvider extends ChangeNotifier {
+class QuickCommandProvider with ChangeNotifier {
   static const String _storeKey = 'quick_commands';
-  
+
   List<QuickCommand> _commands = [];
 
   List<QuickCommand> get commands {
     return List.unmodifiable(_commands)
-      ..sort((a, b) => a.order.compareTo(b.order));
+    ..sort((a, b) => a.order.compareTo(b.order));
   }
 
   Future<void> init() async {
@@ -27,8 +27,8 @@ class QuickCommandProvider extends ChangeNotifier {
       try {
         final List<dynamic> jsonList = json.decode(stored);
         _commands = jsonList
-            .map((json) => QuickCommand.fromJson(json as Map<String, dynamic>))
-            .toList();
+        .map((json) => QuickCommand.fromJson(json as Map<String, dynamic>))
+        .toList();
       } catch (e) {
         _commands = [];
       }
@@ -43,9 +43,9 @@ class QuickCommandProvider extends ChangeNotifier {
 
   List<QuickCommand> getCommandsForServer(String? serverId) {
     return _commands
-        .where((cmd) => cmd.serverId == null || cmd.serverId == serverId)
-        .toList()
-      ..sort((a, b) => a.order.compareTo(b.order));
+    .where((cmd) => cmd.serverId == null || cmd.serverId == serverId)
+    .toList()
+    ..sort((a, b) => a.order.compareTo(b.order));
   }
 
   Future<void> addCommand(QuickCommand command) async {
