@@ -2,17 +2,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../data/model/quick_command.dart';
-import '../../data/model/server.dart';
-import '../../data/provider/quick_command.dart';
+import 'package:server_box/data/model/quick_command.dart';
+import 'package:server_box/data/model/server/server.dart';
+import 'package:server_box/data/provider/quick_command.dart';
+import 'package:server_box/view/page/quick_commands_settings.dart';
 
 class QuickCommandsCard extends StatefulWidget {
   final Server server;
 
   const QuickCommandsCard({
-    Key? key,
+    super.key,
     required this.server,
-  }) : super(key: key);
+  });
 
   @override
   State<QuickCommandsCard> createState() => _QuickCommandsCardState();
@@ -26,7 +27,7 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
   Widget build(BuildContext context) {
     return Consumer<QuickCommandProvider>(
       builder: (context, provider, child) {
-        final commands = provider.getCommandsForServer(widget.server.id);
+        final commands = provider.getCommandsForServer(widget.server.spi.id);
 
         if (commands.isEmpty) {
           return Card(
@@ -35,16 +36,16 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
               child: Column(
                 children: [
                   Icon(Icons.terminal, size: 48, color: Colors.grey),
-                  SizedBox(height: 8),
-                  Text(
+                  const SizedBox(height: 8),
+                  const Text(
                     'No quick commands configured',
                     style: TextStyle(color: Colors.grey),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   ElevatedButton.icon(
                     onPressed: () => _navigateToSettings(context),
-                    icon: Icon(Icons.add),
-                    label: Text('Add Commands'),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Commands'),
                   ),
                 ],
               ),
@@ -60,31 +61,31 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Icon(Icons.flash_on, size: 20),
-                    SizedBox(width: 8),
+                    const Icon(Icons.flash_on, size: 20),
+                    const SizedBox(width: 8),
                     Text(
                       'Quick Commands',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                    Spacer(),
+                    const Spacer(),
                     IconButton(
-                      icon: Icon(Icons.settings, size: 20),
+                      icon: const Icon(Icons.settings, size: 20),
                       onPressed: () => _navigateToSettings(context),
                       tooltip: 'Configure commands',
                     ),
                   ],
                 ),
               ),
-              Divider(height: 1),
+              const Divider(height: 1),
               ListView.builder(
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: commands.length,
                 itemBuilder: (context, index) {
                   final command = commands[index];
-                  return _buildCommandTile(command);
+                  return _buildCommandTile(command, index);
                 },
               ),
             ],
@@ -94,7 +95,7 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
     );
   }
 
-  Widget _buildCommandTile(QuickCommand command) {
+  Widget _buildCommandTile(QuickCommand command, int index) {
     final isLoading = _loading[command.id] ?? false;
     final result = _results[command.id];
 
@@ -105,40 +106,42 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
           leading: Icon(_getIcon(command.icon)),
           title: Text(command.name),
           subtitle: command.description != null
-              ? Text(command.description!, style: TextStyle(fontSize: 12))
+              ? Text(command.description!, style: const TextStyle(fontSize: 12))
               : null,
           trailing: isLoading
-              ? SizedBox(
+              ? const SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : IconButton(
-                  icon: Icon(Icons.play_arrow),
+                  icon: const Icon(Icons.play_arrow),
                   onPressed: () => _executeCommand(command),
                   tooltip: 'Execute',
                 ),
           onTap: isLoading ? null : () => _executeCommand(command),
         ),
         if (result != null) _buildResultDisplay(command.id, result),
-        if (index < _results.length - 1) Divider(height: 1),
+        if (index < _results.length - 1) const Divider(height: 1),
       ],
     );
   }
 
   Widget _buildResultDisplay(String commandId, CommandResult result) {
     final hasError = result.exitCode != 0;
-    
+
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: hasError 
-            ? Colors.red.withOpacity(0.1)
-            : Colors.green.withOpacity(0.1),
+        color: hasError
+            ? Colors.red.withValues(alpha: 0.1)
+            : Colors.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: hasError ? Colors.red.withOpacity(0.3) : Colors.green.withOpacity(0.3),
+          color: hasError
+              ? Colors.red.withValues(alpha: 0.3)
+              : Colors.green.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -151,7 +154,7 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
                 size: 16,
                 color: hasError ? Colors.red : Colors.green,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 hasError ? 'Error (exit: ${result.exitCode})' : 'Success',
                 style: TextStyle(
@@ -159,35 +162,35 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
                   color: hasError ? Colors.red : Colors.green,
                 ),
               ),
-              Spacer(),
+              const Spacer(),
               Text(
                 _formatTime(result.timestamp),
-                style: TextStyle(fontSize: 11, color: Colors.grey),
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               IconButton(
-                icon: Icon(Icons.copy, size: 16),
+                icon: const Icon(Icons.copy, size: 16),
                 onPressed: () => _copyOutput(result.output),
                 tooltip: 'Copy output',
                 padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
+                constraints: const BoxConstraints(),
               ),
               IconButton(
-                icon: Icon(Icons.close, size: 16),
+                icon: const Icon(Icons.close, size: 16),
                 onPressed: () => _clearResult(commandId),
                 tooltip: 'Clear',
                 padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
+                constraints: const BoxConstraints(),
               ),
             ],
           ),
           if (result.output.isNotEmpty) ...[
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -226,7 +229,7 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
   String _formatTime(DateTime time) {
     final now = DateTime.now();
     final diff = now.difference(time);
-    
+
     if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     return '${diff.inHours}h ago';
@@ -239,21 +242,19 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
     });
 
     try {
-      // Qui dovrai usare il client SSH esistente del progetto
-      // Assumo che ci sia un metodo simile disponibile
+      // Usa il client SSH di ServerBox
       final client = widget.server.client;
-      
+
       if (client == null) {
         throw Exception('Server not connected');
       }
 
       final result = await client.run(command.command);
-      final output = result.stdout ?? result.stderr ?? '';
       
       setState(() {
         _results[command.id] = CommandResult(
-          output: output.toString(),
-          exitCode: result.exitCode ?? 1,
+          output: result.trim(),
+          exitCode: 0,
           timestamp: DateTime.now(),
         );
       });
@@ -275,7 +276,7 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
   void _copyOutput(String output) {
     Clipboard.setData(ClipboardData(text: output));
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Output copied to clipboard')),
+      const SnackBar(content: Text('Output copied to clipboard')),
     );
   }
 
@@ -286,8 +287,10 @@ class _QuickCommandsCardState extends State<QuickCommandsCard> {
   }
 
   void _navigateToSettings(BuildContext context) {
-    // Naviga alla schermata di configurazione
-    // Navigator.push(context, MaterialPageRoute(builder: (_) => QuickCommandsSettingsPage()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const QuickCommandsSettingsPage()),
+    );
   }
 }
 
